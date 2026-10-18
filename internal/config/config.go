@@ -18,6 +18,10 @@ const PollInterval = 2 * time.Second
 type Rule struct {
 	State   string `toml:"state"`
 	Pattern string `toml:"pattern"`
+	// Prose marks a waiting rule that reads a question the agent asked in
+	// plain text at a resting prompt. Such a pane still takes typed text,
+	// unlike a dialog, which text typed into would answer.
+	Prose bool `toml:"prose"`
 }
 
 type Tool struct {

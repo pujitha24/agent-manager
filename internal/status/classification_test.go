@@ -1,8 +1,10 @@
 package status
 
 import (
-	"github.com/YoanWai/agent-manager/internal/config"
+	"strings"
 	"testing"
+
+	"github.com/YoanWai/agent-manager/internal/config"
 )
 
 // 2026-08-23 real capture: a numbered message the user already sent stays
@@ -396,6 +398,42 @@ func TestAntigravityPanes(t *testing.T) {
 			}
 			if got := engine.TypingHold("antigravity", tc.pane); got != tc.hold {
 				t.Errorf("TypingHold = %q, want %q", got, tc.hold)
+			}
+		})
+	}
+}
+
+// pi and omp read a question the agent asked in plain text through a waiting
+// rule, since their activity region starts at the pane origin. That pane
+// still rests at a prompt that takes text, while their dialogs hold.
+func TestTypingHoldProseQuestion(t *testing.T) {
+	engine := defaultEngine(t)
+	editor := "\n\n──────────────────────────────\n\n──────────────────────────────\n~/dev/project (main)\nanthropic/claude-sonnet-4"
+	trust := "──────────────────────────────\n\nProject trust\n~/dev/project\n\n→ Trust this project\n  Keep it untrusted\n\n↑↓ navigate  enter save  esc cancel\n\n──────────────────────────────"
+	cases := []struct {
+		name string
+		tool string
+		pane string
+		want string
+	}{
+		{"pi question", "pi", "Which option do you prefer?" + editor, ""},
+		{"pi project trust dialog", "pi", trust, Waiting},
+		{"omp question", "omp", ompFrame(t, "question"), ""},
+		{"omp 18.4.2 question", "omp", ompFrame(t, "18.4.2/question"), ""},
+		{"omp approval dialog", "omp", ompFrame(t, "approval"), Waiting},
+		{"omp 18.4.2 approval dialog", "omp", ompFrame(t, "18.4.2/approval"), Waiting},
+		{"omp running turn whose reply so far ends in a question", "omp", strings.Replace(ompFrame(t, "working"), "step 4", "step 4?", 1), Working},
+		{"omp splash", "omp", ompFrame(t, "splash"), Waiting},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := engine.TypingHold(tc.tool, tc.pane); got != tc.want {
+				t.Fatalf("TypingHold(%s) = %q, want %q", tc.name, got, tc.want)
+			}
+			if tc.want == "" {
+				if got, _ := engine.Match(tc.tool, tc.pane); got != Waiting {
+					t.Fatalf("Match(%s) = %q, want %q: the row still reads waiting", tc.name, got, Waiting)
+				}
 			}
 		})
 	}

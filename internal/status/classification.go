@@ -15,16 +15,23 @@ import (
 // states hold, since a tool whose rules also classify resting frames (pi
 // marks a resumed session idle) would otherwise never take anything again.
 func (e *Engine) TypingHold(tool, pane string) string {
-	state, matched := e.RuleMatch(tool, pane)
+	tr, known := e.tools[tool]
+	var matched, prose bool
+	var state string
+	if known {
+		var r rule
+		r, matched = tr.matchRule(tr.matchScope(pane))
+		state, prose = r.state, r.prose
+	}
 	// A dialog may replace the input line entirely. Its specific waiting
 	// signal is more useful than the generic missing-input working hold.
-	if matched && state == Waiting {
+	if matched && state == Waiting && !prose {
 		return Waiting
 	}
 	if _, ready := e.ActivityRegion(tool, pane); !ready {
 		return Working
 	}
-	if !matched || (state != Working && state != Waiting) {
+	if !matched || prose || (state != Working && state != Waiting) {
 		return ""
 	}
 	// A turn that died leaves its working marker behind; Match reads that
