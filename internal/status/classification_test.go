@@ -2,6 +2,7 @@ package status
 
 import (
 	"github.com/YoanWai/agent-manager/internal/config"
+	"strings"
 	"testing"
 )
 
@@ -45,6 +46,28 @@ func TestClaudeQuestionDialogWaits(t *testing.T) {
 	}
 	if hold := engine.TypingHold("claude", pane); hold != Waiting {
 		t.Fatalf("TypingHold() = %q want %q", hold, Waiting)
+	}
+}
+
+// The agent view an empty-prompt left arrow lands on (issue 687): its
+// composer opens a new background session, so a message must not be typed
+// into it.
+func TestClaudeAgentViewWaits(t *testing.T) {
+	engine := defaultEngine(t)
+	pane := "Your conversation moved to the background — enter opens it · esc returns to it · ctrl+c twice quits\n" +
+		"Needs input\n ✻ Ok                             ok\n" +
+		"Completed\n ✻ cross-session message routing  Replied with the single word \"three\".\n" +
+		"❯ describe a task for a new session\n" +
+		"  ⏵⏵ auto mode · enter to open · space to reply · ctrl+x to delete · ? for shortcuts\n"
+	if got, matched := engine.Match("claude", pane); got != Waiting || !matched {
+		t.Fatalf("Match() = (%q, %t) want (%q, true)", got, matched, Waiting)
+	}
+	if hold := engine.TypingHold("claude", pane); hold != Waiting {
+		t.Fatalf("TypingHold() = %q want %q", hold, Waiting)
+	}
+	plan := strings.Replace(pane, "⏵⏵ auto mode", "⏸ plan mode on", 1)
+	if got, matched := engine.Match("claude", plan); got != Waiting || !matched {
+		t.Fatalf("plan mode Match() = (%q, %t) want (%q, true)", got, matched, Waiting)
 	}
 }
 
