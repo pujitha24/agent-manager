@@ -21,6 +21,10 @@ const PollInterval = 2 * time.Second
 type Rule struct {
 	State   string `toml:"state"`
 	Pattern string `toml:"pattern"`
+	// Question marks a waiting rule that reads a question the agent left in
+	// prose at a resting composer. The row shows waiting, but typed text
+	// still reaches the prompt, so a queued message is delivered.
+	Question bool `toml:"question"`
 }
 
 type Tool struct {

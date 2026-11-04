@@ -11,14 +11,17 @@ import (
 // drawn its input line, and Waiting while its own rules see a dialog, which
 // typed text would answer rather than be read by. An empty string means the
 // pane rests at a prompt that reads what it is handed, which includes a
-// question the agent left on screen: that trips no rule. Only those two rule
-// states hold, since a tool whose rules also classify resting frames (pi
-// marks a resumed session idle) would otherwise never take anything again.
+// question the agent left on screen: that trips no rule, or only a rule
+// marked question. Only those two rule states hold, since a tool whose rules
+// also classify resting frames (pi marks a resumed session idle) would
+// otherwise never take anything again.
 func (e *Engine) TypingHold(tool, pane string) string {
-	state, matched := e.RuleMatch(tool, pane)
+	tr := e.tools[tool]
+	matchedRule, matched := tr.matchRule(tr.matchScope(pane))
+	state := matchedRule.state
 	// A dialog may replace the input line entirely. Its specific waiting
 	// signal is more useful than the generic missing-input working hold.
-	if matched && state == Waiting {
+	if matched && state == Waiting && !matchedRule.question {
 		return Waiting
 	}
 	if _, ready := e.ActivityRegion(tool, pane); !ready {
@@ -30,7 +33,7 @@ func (e *Engine) TypingHold(tool, pane string) string {
 		}
 		return ""
 	}
-	if state != Working && state != Waiting {
+	if state != Working {
 		return ""
 	}
 	// A turn that died leaves its working marker behind; Match reads that

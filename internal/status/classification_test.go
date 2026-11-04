@@ -470,3 +470,34 @@ func TestAntigravityPanes(t *testing.T) {
 		})
 	}
 }
+
+// pi and omp read a question left in prose through a waiting rule, since
+// their activity region starts at the pane origin; it shows waiting while
+// the resting composer still takes a queued message, and a dialog holds.
+func TestTypingHoldQuestionRule(t *testing.T) {
+	engine := defaultEngine(t)
+	piEditor := "\n\n──────────────────────────────\n\n──────────────────────────────\n~/dev/project (main)\nanthropic/claude-sonnet-4"
+	ompBand := "\n\n ⬢ model > ~/dev/project ─────────\n╰─ "
+	cases := []struct {
+		name  string
+		tool  string
+		pane  string
+		state string
+		hold  string
+	}{
+		{"pi question", "pi", "Which file should I edit?" + piEditor, Waiting, ""},
+		{"pi project trust", "pi", "──────────────────────────────\n\nProject trust\n~/dev/project\n\n→ Trust this project\n  Keep it untrusted\n\n↑↓ navigate  enter save  esc cancel\n\n──────────────────────────────", Waiting, Waiting},
+		{"omp question", "omp", "Which file should I edit?" + ompBand, Waiting, ""},
+		{"omp dialog", "omp", "│ ↑↓ navigate  enter select  esc cancel │" + ompBand, Waiting, Waiting},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			if state, _ := engine.Match(testCase.tool, testCase.pane); state != testCase.state {
+				t.Fatalf("Match() = %q, want %q", state, testCase.state)
+			}
+			if hold := engine.TypingHold(testCase.tool, testCase.pane); hold != testCase.hold {
+				t.Fatalf("TypingHold() = %q, want %q", hold, testCase.hold)
+			}
+		})
+	}
+}

@@ -29,7 +29,10 @@ var Resting = []string{Finished, Waiting, Idle, Errored, Dead}
 
 type rule struct {
 	state string
-	re    *regexp.Regexp
+	// question marks a waiting rule that reads a question left in prose at a
+	// resting composer, which still takes typed text, unlike a dialog.
+	question bool
+	re       *regexp.Regexp
 }
 
 type Engine struct {
@@ -71,7 +74,7 @@ func NewEngine(cfg config.Config) (*Engine, error) {
 			if err != nil {
 				return nil, err
 			}
-			compiled = append(compiled, rule{state: raw.State, re: re})
+			compiled = append(compiled, rule{state: raw.State, question: raw.Question, re: re})
 		}
 		def := tool.DefaultStatus
 		if def == "" {
@@ -155,6 +158,11 @@ func (e *Engine) Match(tool, pane string) (string, bool) {
 }
 
 func (tr toolRules) matchRules(scope string) (string, bool) {
+	r, ok := tr.matchRule(scope)
+	return r.state, ok
+}
+
+func (tr toolRules) matchRule(scope string) (rule, bool) {
 	for i, r := range tr.rules {
 		if !r.re.MatchString(scope) {
 			continue
@@ -162,13 +170,13 @@ func (tr toolRules) matchRules(scope string) (string, bool) {
 		if r.state == Working {
 			for _, later := range tr.rules[i+1:] {
 				if later.state == Waiting && later.re.MatchString(scope) {
-					return Waiting, true
+					return later, true
 				}
 			}
 		}
-		return r.state, true
+		return r, true
 	}
-	return "", false
+	return rule{}, false
 }
 
 // RuleMatch reports what the tool's configured rules see, without the

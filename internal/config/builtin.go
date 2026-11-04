@@ -501,7 +501,7 @@ rules = [
   { state = "waiting", pattern = "(?ms)^[ \\t]*Project trust[ \\t]*\\n.*\\n─{8,}[ \\t]*(?:\\n[ \\t]*)*\\z" },
   { state = "errored", pattern = "(?ms)^[ \\t]*Error:[^\\n]*(?:\\n[ \\t]+[^ \\t\\n][^\\n]*){0,8}\\n[ \\t]*\\n─{8,}[ \\t]*\\n(?:[ \\t]*\\n)*─{8,}[ \\t]*(?:\\n[^\\n]*){2,5}[ \\t]*(?:\\n[ \\t]*)*\\z" },
   { state = "errored", pattern = "(?ms)^[ \\t]*[^\\n]*rate limit reached[^\\n]*\\n[ \\t]*\\n─{8,}[ \\t]*\\n(?:[ \\t]*\\n)*─{8,}[ \\t]*(?:\\n[^\\n]*){2,5}[ \\t]*(?:\\n[ \\t]*)*\\z" },
-  { state = "waiting", pattern = "(?ms)\\?[ \\t]*\\n[ \\t]*\\n─{8,}[ \\t]*\\n(?:[ \\t]*\\n)*─{8,}[ \\t]*(?:\\n[^\\n]*){2,5}[ \\t]*(?:\\n[ \\t]*)*\\z" },
+  { state = "waiting", question = true, pattern = "(?ms)\\?[ \\t]*\\n[ \\t]*\\n─{8,}[ \\t]*\\n(?:[ \\t]*\\n)*─{8,}[ \\t]*(?:\\n[^\\n]*){2,5}[ \\t]*(?:\\n[ \\t]*)*\\z" },
   # The spinner sits on a line of its own above the composer, or since pi
   # 0.85 inside the composer's top border ("── ⠹ Working ───"); custom
   # editors keep the standalone shape, so both are live. The composer may
@@ -539,7 +539,7 @@ rules = [
   { state = "waiting", pattern = "(?m)press \\S+ to skip|\\S+ confirm · \\S+ skip · \\S+ exit setup" },
   # a reply that ends in a question waits on the user; while a turn runs
   # the "⎋ Working…" row sits between the reply and the band
-  { state = "waiting", pattern = "(?ms)\\?[ \\t]*\\n(?:[ \\t]*\\n)*(?:[ \\t]{20,}\\S[^\\n]*\\n)? [^ \\n][^\\n]*\\n╰─(?:[ \\t][^\\n]*)?(?:\\n(?:[ \\t][^\\n]*)?)*\\z" },
+  { state = "waiting", question = true, pattern = "(?ms)\\?[ \\t]*\\n(?:[ \\t]*\\n)*(?:[ \\t]{20,}\\S[^\\n]*\\n)? [^ \\n][^\\n]*\\n╰─(?:[ \\t][^\\n]*)?(?:\\n(?:[ \\t][^\\n]*)?)*\\z" },
   # while a turn runs the band trades its idle brand for a spinner and an
   # elapsed timer ("⠋ 4s > ⬢ model > …"); retries keep it running
   { state = "working", pattern = "(?ms)^ [^ \\n] \\d+[smh] [^\\n]*\\n╰─(?:[ \\t][^\\n]*)?(?:\\n(?:[ \\t][^\\n]*)?)*\\z" },
