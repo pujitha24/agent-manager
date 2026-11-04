@@ -19,12 +19,12 @@ var copyToClipboard = clipboard.WriteText
 type LinkPageMsg struct{ URL string }
 
 func ShowLinkPage(url string) tea.Cmd {
-	return tea.Exec(&LinkPage{URL: url}, func(err error) tea.Msg {
+	return tea.Exec(&LinkPage{URL: url}, AfterHandoff(func(err error) tea.Msg {
 		if err != nil {
 			return LinkOpenErrMsg{Err: fmt.Errorf("show link: %w", err)}
 		}
 		return nil
-	})
+	}))
 }
 
 // LinkPage prints a link on the plain terminal, with the manager's screen

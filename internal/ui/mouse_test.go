@@ -87,6 +87,32 @@ func TestSyncMouseCaptureAsksFocusForEveryMotion(t *testing.T) {
 	}
 }
 
+// Bubble Tea turns reporting off when the terminal goes to an attach, an
+// editor or the link page and does not turn it back on, so the way back asks
+// for it again even though the remembered state has not changed. Not
+// parallel: the handoff flag is process-wide.
+func TestSyncMouseCaptureRearmsAfterAHandoff(t *testing.T) {
+	m := &Model{}
+	uiterminal.TakeHandedBack()
+	if cmd := m.syncMouseCapture(); cmd != nil {
+		t.Fatal("no handoff, yet the mouse was announced again")
+	}
+	uiterminal.AfterHandoff(func(error) tea.Msg { return nil })(nil)
+	cmd := m.syncMouseCapture()
+	if cmd == nil || cmd() != tea.EnableMouseCellMotion() {
+		t.Fatal("the return from a handoff did not ask for the mouse again")
+	}
+	if cmd := m.syncMouseCapture(); cmd != nil {
+		t.Fatal("one handoff announced the mouse twice")
+	}
+	m.push(newFocusSurface(m))
+	m.syncMouseCapture()
+	uiterminal.AfterHandoff(func(error) tea.Msg { return nil })(nil)
+	if cmd := m.syncMouseCapture(); cmd == nil || cmd() != tea.EnableMouseAllMotion() {
+		t.Fatal("the return into focus did not ask for every motion")
+	}
+}
+
 func TestDragReleasePersistsAndExits(t *testing.T) {
 	st, err := store.Open(filepath.Join(t.TempDir(), "state.db"))
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	uigeometry "github.com/YoanWai/agent-manager/internal/ui/geometry"
 	"github.com/YoanWai/agent-manager/internal/ui/presentation"
 	uirail "github.com/YoanWai/agent-manager/internal/ui/rail"
+	uiterminal "github.com/YoanWai/agent-manager/internal/ui/terminal"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -19,7 +20,10 @@ import (
 func (m *Model) syncMouseCapture() tea.Cmd {
 	release := m.prefs.mouseDisabled && !m.focused()
 	hover := !release && (m.focused() || m.base == baseList && m.rail.MenuOpen())
-	if release == m.mouse.released && hover == m.mouse.hover {
+	// A program that had the terminal left reporting off, whatever this
+	// remembers, so the state is sent again even when it has not changed.
+	handedBack := uiterminal.TakeHandedBack()
+	if !handedBack && release == m.mouse.released && hover == m.mouse.hover {
 		return nil
 	}
 	leavingHover := m.mouse.hover && !hover
