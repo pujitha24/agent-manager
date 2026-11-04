@@ -89,6 +89,9 @@ rules = [
   # screen, its Submit row and review screen included, which carry neither
   # a numbered selected option nor always a footer
   { state = "waiting", pattern = "(?m)^←  .*✔ Submit  →" },
+  # Claude's own agent view: its composer starts a new background session
+  # instead of reaching the conversation, so nothing is typed there
+  { state = "waiting", pattern = "(?m)^Your conversation moved to the background — " },
   # spinner row of an active turn, any duration format:
   # "✳ Drizzling… (6s · thinking)" / "✽ Zigzagging… (3m 18s · ↓ 1.4k tokens)"
   { state = "working", pattern = "(?m)^[✻✳✶✽✢·✦✧+*] \\S+… \\(" },

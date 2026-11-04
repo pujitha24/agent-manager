@@ -95,6 +95,20 @@ func TestClaudeQuestionDialogWaitsOnEveryRow(t *testing.T) {
 	}
 }
 
+// A pane left on Claude's agent view draws a composer that starts a new
+// background session, so a message typed there never reaches the conversation.
+func TestClaudeAgentViewHoldsTyping(t *testing.T) {
+	engine := defaultEngine(t)
+	const pane = "Your conversation moved to the background — enter opens it · esc returns to it · ctrl+c twice quits\n" +
+		"Needs input\n ✻ Ok                             ok\n" +
+		"Completed\n ✻ cross-session message routing  Replied with the single word \"three\".\n" +
+		"❯ describe a task for a new session\n" +
+		"  ⏵⏵ auto mode · enter to open · space to reply · ctrl+x to delete · ? for shortcuts\n"
+	if hold := engine.TypingHold("claude", pane); hold != Waiting {
+		t.Fatalf("TypingHold() = %q want %q", hold, Waiting)
+	}
+}
+
 func TestClaudeQuestionDialogReleasesAfterItCloses(t *testing.T) {
 	engine := defaultEngine(t)
 	const dialog = "❯ ask me which areas\n\n" +
